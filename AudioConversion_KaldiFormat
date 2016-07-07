@@ -1,0 +1,48 @@
+HOW TO CONVERT AUDIO FILES TO KALDI INPUT FORMAT
+
+
+1) install mediainfo and play
+mediainfo : apt-get install mediainfo
+
+or 
+
+play: apt-get install play
+
+2) How to know audio format and data information:
+
+mediainfo file
+
+play file  (give us channel information 16 bit/24 bit)
+
+3) Install ffmpeg and sox
+
+yum install ffmpeg
+yum install sox
+
+4) Convert:
+
+FROM: original audio
+
+TO: RAW 16 kHz, 16-bit, signed, little-endian (server native), linear PCM
+
+
+Sampling rate -> 16 Khz
+Format -> linear PCM
+Channel -> 1 @ 16 bit
+
+STEPS
+
+A) CONVERT to 16-bit, signed, little-endian (server native), linear PCM 
+Info: https://trac.ffmpeg.org/wiki/audio%20types
+
+ffmpeg -i leo.wav  -acodec pcm_s16le  leo_new.wav
+
+B) CONVERT sampling rate to 16000
+Info: http://www.thegeekstuff.com/2009/05/sound-exchange-sox-15-examples-to-manipulate-audio-files/
+
+sox leo_new.wav -r 16000 leo2.wav 
+
+C) Cleaning and renaming files 
+mv leo.wav leo.wav_OLD
+mv leo2.wav leo.wav
+rm leo_new.wav
