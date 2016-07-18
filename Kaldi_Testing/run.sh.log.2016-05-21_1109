@@ -1,0 +1,93 @@
+Preparing train and test data
+make wav.scp for train test
+~/github/kaldi/egs/swahili/s5/asr_swahili/data/train ~/github/kaldi/egs/swahili/s5/asr_swahili/data
+~/github/kaldi/egs/swahili/s5/asr_swahili/data
+~/github/kaldi/egs/swahili/s5/asr_swahili/data/test/wav5 ~/github/kaldi/egs/swahili/s5/asr_swahili/data
+~/github/kaldi/egs/swahili/s5/asr_swahili/data
+copy spk2utt, utt2spk, text for train test
+~/github/kaldi/egs/swahili/s5/data/local ~/github/kaldi/egs/swahili/s5/asr_swahili/data
+Archive:  swahili.arpa.zip
+  inflating: ../../data/local/swahili.arpa  
+~/github/kaldi/egs/swahili/s5/asr_swahili/data
+Preparing data OK.
+cat: asr_swahili/lang/lexicon.txt: No such file or directory
+cp: cannot stat 'asr_swahili/lang/lexicon.txt': No such file or directory
+cp: cannot stat 'asr_swahili/lang/nonsilence_phones.txt': No such file or directory
+cp: cannot stat 'asr_swahili/lang/optional_silence.txt': No such file or directory
+Dictionary preparation succeeded
+Checking data/local/dict/silence_phones.txt ...
+--> reading data/local/dict/silence_phones.txt
+--> data/local/dict/silence_phones.txt is OK
+
+Checking data/local/dict/optional_silence.txt ...
+--> ERROR: fail to open data/local/dict/optional_silence.txt
+*Error validating directory data/local/dict*
+arpa2fst --disambig-symbol=#0 --read-symbol-table=lang/words.txt local/swahili.arpa lang/G.fst 
+ERROR (arpa2fst:Input():kaldi-io.cc:741) Error opening input stream lang/words.txt
+
+[ Stack-Trace: ]
+arpa2fst() [0x478cb8]
+kaldi::MessageLogger::HandleMessage(kaldi::LogMessageEnvelope const&, char const*)
+kaldi::MessageLogger::~MessageLogger()
+kaldi::Input::Input(std::string const&, bool*)
+main
+__libc_start_main
+arpa2fst() [0x4428a9]
+
+steps/make_mfcc.sh --nj 20 --cmd run.pl -l arch=*64* data/train exp/make_mfcc/train mfcc
+utils/validate_data_dir.sh: Successfully validated data-directory data/train
+steps/make_mfcc.sh: [info]: no segments file exists: assuming wav.scp indexed by utterance.
+run.pl: 4 / 20 failed, log is in exp/make_mfcc/train/make_mfcc_train.*.log
+steps/compute_cmvn_stats.sh data/train exp/make_mfcc/train mfcc
+make_cmvn.sh: no such file data/train/feats.scp
+steps/make_mfcc.sh --nj 20 --cmd run.pl -l arch=*64* data/test exp/make_mfcc/test mfcc
+utils/validate_data_dir.sh: Successfully validated data-directory data/test
+steps/make_mfcc.sh: [info]: no segments file exists: assuming wav.scp indexed by utterance.
+Succeeded creating MFCC features for test
+steps/compute_cmvn_stats.sh data/test exp/make_mfcc/test mfcc
+Succeeded creating CMVN stats for test
+steps/train_mono.sh --nj 20 --cmd run.pl -l arch=*64* data/train data/lang exp/system1/mono
+cat: data/lang/oov.int: No such file or directory
+mkgraph.sh: expected data/lang/L.fst to exist
+steps/decode.sh --nj 4 --cmd run.pl -l arch=*64* exp/system1/mono/graph data/test exp/system1/mono/decode_test
+decode.sh: no such file exp/system1/mono/final.mdl
+Mono training done.
+
+steps/align_si.sh --boost-silence 1.25 --nj 20 --cmd run.pl -l arch=*64* data/train data/lang exp/system1/mono exp/system1/mono_ali
+steps/align_si.sh: expected file data/lang/oov.int to exist
+steps/train_deltas.sh --boost-silence 1.25 --cmd run.pl -l arch=*64* 3200 30000 data/train data/lang exp/system1/mono_ali exp/system1/tri1
+train_deltas.sh: no such file exp/system1/mono_ali/final.mdl
+mkgraph.sh: expected data/lang/L.fst to exist
+steps/decode.sh --nj 4 --cmd run.pl -l arch=*64* exp/system1/tri1/graph data/test exp/system1/tri1/decode_test
+decode.sh: no such file exp/system1/tri1/final.mdl
+steps/align_si.sh --nj 20 --cmd run.pl -l arch=*64* data/train data/lang exp/system1/tri1 exp/system1/tri1_ali
+steps/align_si.sh: expected file data/lang/oov.int to exist
+steps/train_deltas.sh --cmd run.pl -l arch=*64* 3200 30000 data/train data/lang exp/system1/tri1_ali exp/system1/tri2a
+train_deltas.sh: no such file exp/system1/tri1_ali/final.mdl
+mkgraph.sh: expected data/lang/L.fst to exist
+steps/decode.sh --nj 4 --cmd run.pl -l arch=*64* exp/system1/tri2a/graph data/test exp/system1/tri2a/decode_test
+decode.sh: no such file exp/system1/tri2a/final.mdl
+Triphone training done.
+
+steps/align_si.sh --nj 20 --cmd run.pl -l arch=*64* data/train data/lang exp/system1/tri2a exp/system1/tri2a_ali
+steps/align_si.sh: expected file data/lang/oov.int to exist
+steps/train_lda_mllt.sh --cmd run.pl -l arch=*64* --splice-opts --left-context=3 --right-context=3 2000 20000 data/train data/lang exp/system1/tri2a_ali exp/system1/tri2b
+train_lda_mllt.sh: no such file exp/system1/tri2a_ali/final.mdl
+mkgraph.sh: expected data/lang/L.fst to exist
+steps/decode.sh --nj 4 --cmd run.pl -l arch=*64* exp/system1/tri2b/graph data/test exp/system1/tri2b/decode_test
+decode.sh: no such file exp/system1/tri2b/final.mdl
+LDA+MLLT training done.
+
+steps/align_si.sh --nj 20 --cmd run.pl -l arch=*64* --use-graphs true data/train data/lang exp/system1/tri2b exp/system1/tri2b_ali
+steps/align_si.sh: expected file data/lang/oov.int to exist
+steps/train_sat.sh --cmd run.pl -l arch=*64* 2000 20000 data/train data/lang exp/system1/tri2b_ali exp/system1/tri3b
+train_sat.sh: no such file data/train/feats.scp
+mkgraph.sh: expected data/lang/L.fst to exist
+steps/decode_fmllr.sh --nj 4 --cmd run.pl -l arch=*64* exp/system1/tri3b/graph data/test exp/system1/tri3b/decode_test
+cat: exp/system1/tri3b/graph/phones/silence.csl: No such file or directory
+steps/align_fmllr.sh --nj 20 --cmd run.pl -l arch=*64* data/train data/lang exp/system1/tri3b exp/system1/tri3b_ali
+cat: data/lang/oov.int: No such file or directory
+SAT+FMLLR training done.
+
+steps/make_denlats.sh --nj 20 --cmd run.pl -l arch=*64* --sub-split 10 --transform-dir exp/system1/tri3b_ali data/train data/lang exp/system1/tri3b exp/system1/tri3b_denlats
+cat: data/lang/oov.int: No such file or directory
