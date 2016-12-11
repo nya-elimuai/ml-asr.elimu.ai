@@ -1,0 +1,24 @@
+steps/make_mfcc.sh --nj 4 --cmd run.pl -l arch=*64* data/foo exp/make_mfcc/foo mfcc
+utils/validate_data_dir.sh: Successfully validated data-directory data/foo
+steps/make_mfcc.sh: [info]: no segments file exists: assuming wav.scp indexed by utterance.
+run.pl: 4 / 4 failed, log is in exp/make_mfcc/foo/make_mfcc_foo.*.log
+steps/compute_cmvn_stats.sh data/foo exp/make_mfcc/foo mfcc
+make_cmvn.sh: no such file data/foo/feats.scp
+steps/decode_fmllr.sh --nj 4 --cmd run.pl -l arch=*64*
+Wrong #arguments (0, expected 3)
+Usage: steps/decode_fmllr.sh [options] <graph-dir> <data-dir> <decode-dir>
+ e.g.: steps/decode_fmllr.sh exp/tri2b/graph_tgpr data/test_dev93 exp/tri2b/decode_dev93_tgpr
+main options (for others, see top of script file)
+  --config <config-file>                   # config containing options
+  --nj <nj>                                # number of parallel jobs
+  --cmd <cmd>                              # Command to run in parallel with
+  --adapt-model <adapt-mdl>                # Model to compute transforms with
+  --alignment-model <ali-mdl>              # Model to get Gaussian-level alignments for
+                                           # 1st pass of transform computation.
+  --final-model <finald-mdl>               # Model to finally decode with
+  --si-dir <speaker-indep-decoding-dir>    # use this to skip 1st pass of decoding
+                                           # Caution-- must be with same tree
+  --acwt <acoustic-weight>                 # default 0.08333 ... used to get posteriors
+  --num-threads <n>                        # number of threads to use, default 1.
+  --scoring-opts <opts>                    # options to local/score.sh
+./cmd.sh: línea 7: exp/system1/tri3b/graph: Es un directorio
